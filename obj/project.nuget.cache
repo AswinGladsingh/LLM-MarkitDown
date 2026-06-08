@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "E8SLErq9O/k=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\aswin\\Downloads\\PythonEMail\\MarkdownConverter\\MarkdownConverter.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\aswin\\.nuget\\packages\\pdfpig\\0.1.14\\pdfpig.0.1.14.nupkg.sha512"
+  ],
+  "logs": []
+}
