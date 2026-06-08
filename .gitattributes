@@ -1,0 +1,2 @@
+dotnet-sdk-10.0.402-win-x64.exe filter=lfs diff=lfs merge=lfs -text
+pgadmin4-9.18-x64.exe filter=lfs diff=lfs merge=lfs -text
