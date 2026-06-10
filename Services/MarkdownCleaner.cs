@@ -5,16 +5,24 @@ namespace MarkdownConverter.Services;
 
 public static class MarkdownCleaner
 {
-    public static string Clean(string markdown, bool compact)
+    public static string Clean(string markdown, bool compact, bool preserveWhitespace = false)
     {
         markdown = markdown.Replace("\r\n", "\n").Replace('\r', '\n');
-        markdown = Regex.Replace(markdown, @"[ \t]+", " ");
-        markdown = Regex.Replace(markdown, @" *\n *", "\n");
+
+        if (!preserveWhitespace)
+        {
+            markdown = Regex.Replace(markdown, @"[ \t]+", " ");
+            markdown = Regex.Replace(markdown, @" *\n *", "\n");
+        }
 
         if (compact)
         {
             markdown = RemoveRepeatedBoilerplate(markdown);
-            markdown = Regex.Replace(markdown, @"\n{3,}", "\n\n");
+
+            if (!preserveWhitespace)
+            {
+                markdown = Regex.Replace(markdown, @"\n{3,}", "\n\n");
+            }
         }
 
         return markdown.Trim() + "\n";

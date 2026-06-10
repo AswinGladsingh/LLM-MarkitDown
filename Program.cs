@@ -27,7 +27,7 @@ app.MapGet("/", () => Results.Content("""
 </head>
 <body>
   <h1>Document to Markdown</h1>
-  <p>Upload <code>.pdf</code>, <code>.docx</code>, <code>.txt</code>, <code>.md</code>, <code>.rtf</code>, or <code>.html</code> and download a compact Markdown file.</p>
+  <p>Upload documents or source files like <code>.pdf</code>, <code>.docx</code>, <code>.html</code>, <code>.js</code>, <code>.ts</code>, or <code>.cs</code> and download a compact Markdown file.</p>
   <form action="/convert" method="post" enctype="multipart/form-data">
     <input name="file" type="file" required>
     <label><input name="compact" type="checkbox" value="true" checked> Compact repeated boilerplate and blank lines</label>
