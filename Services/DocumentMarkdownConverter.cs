@@ -5,12 +5,56 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using MarkdownConverter.Models;
 using UglyToad.PdfPig;
-
+using MarkdownConverter.Services.Parsers;
 namespace MarkdownConverter.Services;
 
 public sealed class DocumentMarkdownConverter
 {
     private static readonly XNamespace Wordprocessing = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    private static readonly Dictionary<string, string> SourceCodeLanguages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".html"] = "html",
+        [".htm"] = "html",
+        [".css"] = "css",
+        [".scss"] = "scss",
+        [".sass"] = "sass",
+        [".js"] = "javascript",
+        [".jsx"] = "jsx",
+        [".ts"] = "typescript",
+        [".tsx"] = "tsx",
+        [".cs"] = "csharp",
+        [".cshtml"] = "cshtml",
+        [".razor"] = "razor",
+        [".csproj"] = "xml",
+        [".props"] = "xml",
+        [".targets"] = "xml",
+        [".sln"] = "text",
+        [".json"] = "json",
+        [".xml"] = "xml",
+        [".xaml"] = "xml",
+        [".config"] = "xml",
+        [".yml"] = "yaml",
+        [".yaml"] = "yaml",
+        [".sql"] = "sql",
+        [".py"] = "python",
+        [".java"] = "java",
+        [".c"] = "c",
+        [".h"] = "c",
+        [".cpp"] = "cpp",
+        [".hpp"] = "cpp",
+        [".go"] = "go",
+        [".rs"] = "rust",
+        [".php"] = "php",
+        [".rb"] = "ruby",
+        [".sh"] = "bash",
+        [".ps1"] = "powershell",
+        [".bat"] = "bat",
+        [".cmd"] = "bat",
+        [".fs"] = "fsharp",
+        [".vb"] = "vbnet",
+        [".vue"] = "vue",
+        [".svelte"] = "svelte"
+    };
 
     public async Task<MarkdownConversionResult> ConvertAsync(
         IFormFile file,
@@ -23,20 +67,43 @@ public sealed class DocumentMarkdownConverter
         }
 
         await using var input = file.OpenReadStream();
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        var markdown = extension switch
-        {
-            ".pdf" => ConvertPdf(input),
-            ".docx" => ConvertDocx(input),
-            ".txt" => await ReadTextAsync(input, cancellationToken),
-            ".md" or ".markdown" => await ReadTextAsync(input, cancellationToken),
-            ".rtf" => ConvertRtf(await ReadTextAsync(input, cancellationToken)),
-            ".html" or ".htm" => ConvertHtml(await ReadTextAsync(input, cancellationToken)),
-            _ => throw new NotSupportedException(
-                $"Unsupported file type '{extension}'. Supported types: .pdf, .docx, .txt, .md, .rtf, .html.")
-        };
 
-        markdown = MarkdownCleaner.Clean(markdown, options.Compact);
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var isSourceCode = SourceCodeLanguages.ContainsKey(extension);
+
+        string markdown;
+
+        if (extension == ".cs")
+        {
+            var source = await ReadTextAsync(input, cancellationToken);
+
+            markdown = CSharpParser.Convert(
+                file.FileName,
+                source);
+        }
+        else
+        {
+            markdown = isSourceCode
+                ? ConvertSourceCode(
+                    file.FileName,
+                    extension,
+                    await ReadTextAsync(input, cancellationToken))
+                : extension switch
+                {
+                    ".pdf" => ConvertPdf(input),
+                    ".docx" => ConvertDocx(input),
+                    ".txt" => await ReadTextAsync(input, cancellationToken),
+                    ".md" or ".markdown" => await ReadTextAsync(input, cancellationToken),
+                    ".rtf" => ConvertRtf(await ReadTextAsync(input, cancellationToken)),
+                    _ => throw new NotSupportedException(
+                        $"Unsupported file type '{extension}'. Supported types include documents (.pdf, .docx, .txt, .md, .rtf) and code files (.html, .js, .ts, .cs, .css, .json, .xml, .sql, .py, and more).")
+                };
+        }
+
+        markdown = MarkdownCleaner.Clean(
+            markdown,
+            options.Compact,
+            preserveWhitespace: isSourceCode);
 
         return new MarkdownConversionResult(
             file.FileName,
@@ -191,6 +258,23 @@ public sealed class DocumentMarkdownConverter
         return await reader.ReadToEndAsync(cancellationToken);
     }
 
+    private static string ConvertSourceCode(string fileName, string extension, string source)
+    {
+        var language = SourceCodeLanguages[extension];
+        var safeFileName = Path.GetFileName(fileName);
+        var fence = source.Contains("````", StringComparison.Ordinal)
+            ? "`````"
+            : "````";
+
+        return $"""
+        # {safeFileName}
+
+        {fence}{language}
+        {source.Trim()}
+        {fence}
+        """;
+    }
+
     private static string ConvertRtf(string rtf)
     {
         var text = Regex.Replace(rtf, @"\\'[0-9a-fA-F]{2}", " ");
@@ -199,12 +283,4 @@ public sealed class DocumentMarkdownConverter
         return WebUtility.HtmlDecode(text);
     }
 
-    private static string ConvertHtml(string html)
-    {
-        var text = Regex.Replace(html, @"<(script|style)[\s\S]*?</\1>", " ", RegexOptions.IgnoreCase);
-        text = Regex.Replace(text, @"</(h1|h2|h3|p|div|li|tr)>", "\n", RegexOptions.IgnoreCase);
-        text = Regex.Replace(text, @"<li[^>]*>", "- ", RegexOptions.IgnoreCase);
-        text = Regex.Replace(text, "<[^>]+>", " ");
-        return WebUtility.HtmlDecode(text);
-    }
 }

@@ -9,9 +9,11 @@ A small ASP.NET Core API that converts uploaded documents into compact Markdown 
 - Markdown (`.md`, `.markdown`)
 - Plain text (`.txt`)
 - RTF (`.rtf`)
-- HTML (`.html`, `.htm`)
+- Source code (`.html`, `.htm`, `.css`, `.js`, `.jsx`, `.ts`, `.tsx`, `.cs`, `.cshtml`, `.razor`, `.json`, `.xml`, `.yml`, `.yaml`, `.sql`, `.py`, `.java`, `.cpp`, `.go`, `.rs`, `.php`, `.rb`, `.ps1`, and more)
 
 Old binary Word files (`.doc`) are not supported directly. Save them as `.docx` first.
+
+Source code files are wrapped in fenced Markdown code blocks and keep indentation intact. The cleaner does not collapse spaces inside code.
 
 ## Run
 
