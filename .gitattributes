@@ -1,4 +1,5 @@
 dotnet-hosting-10.0.9-win filter=lfs diff=lfs merge=lfs -text
 dotnet-hosting-10.0.9-win.zip filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
 dotnet-sdk-10.0.402-win-x64.exe filter=lfs diff=lfs merge=lfs -text
 pgadmin4-9.18-x64.exe filter=lfs diff=lfs merge=lfs -text
